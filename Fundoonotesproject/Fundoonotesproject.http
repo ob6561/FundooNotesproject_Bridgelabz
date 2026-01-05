@@ -1,0 +1,6 @@
+@Fundoonotesproject_HostAddress = http://localhost:5063
+
+GET {{Fundoonotesproject_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
