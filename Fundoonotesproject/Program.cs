@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-
 using BusinessLayer;
 using DataLayer.Context;
 using DataLayer.Repositories.Interfaces;
@@ -60,6 +59,8 @@ namespace Fundoonotesproject
 
             // -------------------- Dependency Injection --------------------
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<INoteRepository, NoteRepository>();
+            builder.Services.AddScoped<NoteService>();
             builder.Services.AddScoped<UserService>();
 
             // -------------------- JWT Authentication --------------------
