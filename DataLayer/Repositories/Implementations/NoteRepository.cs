@@ -49,6 +49,28 @@ namespace DataLayer.Repositories.Implementations
             _context.Notes.Remove(note);
             _context.SaveChanges();
         }
+
+        public List<Note> SearchNotes(int userId, string query)
+        {
+            return _context.Notes
+                .Where(n =>
+                    n.UserId == userId &&
+                    !n.IsDeleted &&
+                    (n.Title.Contains(query) || n.Content.Contains(query))
+                )
+                .ToList();
+        }
+
+        public void BulkDelete(List<int> noteIds, int userId)
+        {
+            var notes = _context.Notes
+                .Where(n => noteIds.Contains(n.NoteId) && n.UserId == userId)
+                .ToList();
+
+            _context.Notes.RemoveRange(notes);
+            _context.SaveChanges();
+        }
+
     }
 }
 

@@ -91,6 +91,11 @@ namespace Fundoonotesproject
                 app.UseSwaggerUI();
             }
 
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
             app.UseHttpsRedirection();
 
             app.UseAuthentication(); // IMPORTANT

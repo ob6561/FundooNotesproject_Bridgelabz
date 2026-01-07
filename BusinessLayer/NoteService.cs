@@ -37,10 +37,15 @@ namespace BusinessLayer
                 Content = dto.Content,
                 UserId = userId,
                 CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now
+                UpdatedAt = DateTime.Now,
+                Color = "#ffffff",
+                IsPinned = false,
+                IsArchived = false,
+                IsDeleted = false
             };
 
             _noteRepository.Add(note);
+            
         }
 
         public bool UpdateNote(int noteId, int userId, UpdateNoteDto dto)
@@ -64,6 +69,57 @@ namespace BusinessLayer
             _noteRepository.Delete(note);
             return true;
         }
+
+        public bool TogglePin(int noteId, int userId)
+        {
+            var note = _noteRepository.GetById(noteId,userId);
+            if(note == null) return false;
+            note.IsPinned = !note.IsPinned;
+            note.UpdatedAt = DateTime.Now;
+            _noteRepository.Update(note);
+            return true;
+        }
+
+        public List<Note> SearchNotes(int userId, string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return new List<Note>();
+
+            return _noteRepository.SearchNotes(userId, query);
+        }
+
+        public bool ToggleArchive(int noteId, int userId)
+        {
+            var note = _noteRepository.GetById(noteId, userId);
+            if (note == null) return false;
+
+            note.IsArchived = !note.IsArchived;
+            note.UpdatedAt = DateTime.Now;
+
+            _noteRepository.Update(note);
+            return true;
+        }
+
+        public bool UpdateColor(int noteId, int userId, string color)
+        {
+            var note = _noteRepository.GetById(noteId, userId);
+            if (note == null) return false;
+
+            note.Color = color;
+            note.UpdatedAt = DateTime.Now;
+
+            _noteRepository.Update(note);
+            return true;
+        }
+
+        public void BulkDeleteNotes(List<int> noteIds, int userId)
+        {
+            if (noteIds == null || !noteIds.Any())
+                return;
+
+            _noteRepository.BulkDelete(noteIds, userId);
+        }
+
     }
 }
 

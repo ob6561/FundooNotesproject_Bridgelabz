@@ -16,5 +16,9 @@ namespace DataLayer.Repositories.Interfaces
         void Add(Note note);
         void Update(Note note);
         void Delete(Note note);
+        void BulkDelete(List<int> noteIds, int userId);
+        List<Note> SearchNotes(int userId, string query);
+        
+
     }
 }

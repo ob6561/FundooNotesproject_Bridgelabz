@@ -1,11 +1,8 @@
 ﻿using BusinessLayer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using ModelLayer.DTOs;
 using ModelLayer.DTOs.Notes;
-using ModelLayer.Entities;
-using System.Security.Claims;
+using System.Linq;
 
 namespace Fundoonotesproject.Controllers
 {
@@ -24,10 +21,11 @@ namespace Fundoonotesproject.Controllers
         
         private int GetUserId()
         {
-            return int.Parse(User.FindFirst("UserId")!.Value);
+            var userIdClaim = User.FindFirst("UserId")?.Value;
+            return int.Parse(userIdClaim!);
         }
 
-        
+        // api/notes
         [HttpGet]
         public IActionResult GetAllNotes()
         {
@@ -36,7 +34,7 @@ namespace Fundoonotesproject.Controllers
             return Ok(notes);
         }
 
-        
+        // notes id
         [HttpGet("{id}")]
         public IActionResult GetNoteById(int id)
         {
@@ -49,40 +47,103 @@ namespace Fundoonotesproject.Controllers
             return Ok(note);
         }
 
-        
+        // POST notes
         [HttpPost]
-        public IActionResult CreateNote(CreateNoteDto dto)
+        public IActionResult CreateNote([FromBody] CreateNoteDto dto)
         {
             int userId = GetUserId();
             _noteService.CreateNote(dto, userId);
             return Ok("Note created successfully");
         }
 
-        
+        // PUT notes id
         [HttpPut("{id}")]
-        public IActionResult UpdateNote(int id, UpdateNoteDto dto)
+        public IActionResult UpdateNote(int id, [FromBody] UpdateNoteDto dto)
         {
             int userId = GetUserId();
-            bool result = _noteService.UpdateNote(id, userId, dto);
+            bool updated = _noteService.UpdateNote(id, userId, dto);
 
-            if (!result)
+            if (!updated)
                 return NotFound("Note not found");
 
             return Ok("Note updated successfully");
         }
 
-        
+        // DELETE notes id
         [HttpDelete("{id}")]
         public IActionResult DeleteNote(int id)
         {
             int userId = GetUserId();
-            bool result = _noteService.DeleteNote(id, userId);
+            bool deleted = _noteService.DeleteNote(id, userId);
 
-            if (!result)
+            if (!deleted)
                 return NotFound("Note not found");
 
             return Ok("Note deleted successfully");
         }
+
+        // patch id
+        [HttpPatch("{id}/pin")]
+        public IActionResult TogglePin(int id)
+        {
+            int userId = GetUserId();
+            bool result = _noteService.TogglePin(id, userId);
+
+            if (!result)
+                return NotFound("Note not found");
+
+            return Ok("Pin status toggled");
+        }
+
+        // debug checking jwt
+        [HttpGet("debug-auth")]
+        public IActionResult DebugAuth()
+        {
+            return Ok(
+                User.Claims.Select(c => new { c.Type, c.Value })
+            );
+        }
+
+        // notes searching
+        [HttpGet("search")]
+        public IActionResult SearchNotes([FromQuery] string query)
+        {
+            int userId = GetUserId();
+            var notes = _noteService.SearchNotes(userId, query);
+            return Ok(notes);
+        }
+
+        [HttpPatch("{id}/archive")]
+        public IActionResult ToggleArchive(int id)
+        {
+            int userId = GetUserId();
+            bool result = _noteService.ToggleArchive(id, userId);
+
+            if (!result)
+                return NotFound("Note not found");
+
+            return Ok("Archive status toggled");
+        }
+
+        [HttpPatch("{id}/color")]
+        public IActionResult UpdateColor(int id, UpdateNoteColorDto dto)
+        {
+            int userId = GetUserId();
+            bool result = _noteService.UpdateColor(id, userId, dto.Color);
+
+            if (!result)
+                return NotFound("Note not found");
+
+            return Ok("Color updated successfully");
+        }
+
+        [HttpDelete("bulk")]
+        public IActionResult BulkDelete(BulkDeleteNotesDto dto)
+        {
+            int userId = GetUserId();
+            _noteService.BulkDeleteNotes(dto.NoteIds, userId);
+            return Ok("Notes deleted successfully");
+        }
+
     }
 }
-
