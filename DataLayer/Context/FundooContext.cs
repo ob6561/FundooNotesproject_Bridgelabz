@@ -18,7 +18,9 @@ namespace DataLayer.Context
 
         public DbSet<User> Users { get; set; }
         public DbSet<Note> Notes { get; set; }
-        // Notes will be added later
+        public DbSet<Otp> Otps { get; set; }
+        public DbSet<Label> Labels { get; set; }
+
     }
 }
 

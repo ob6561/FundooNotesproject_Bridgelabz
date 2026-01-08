@@ -42,7 +42,8 @@ namespace Fundoonotesproject.Controllers
         [HttpPost("verify-email")]
         public IActionResult VerifyEmail(VerifyEmailDto dto)
         {
-            return Ok("Email verified (stub)");
+            var result = _userService.VerifyEmail(dto);
+            return Ok(result);
         }
 
         [HttpPost("forgot-password")]

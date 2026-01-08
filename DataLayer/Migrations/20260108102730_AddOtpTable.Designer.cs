@@ -4,6 +4,7 @@ using DataLayer.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataLayer.Migrations
 {
     [DbContext(typeof(FundooContext))]
-    partial class FundooContextModelSnapshot : ModelSnapshot
+    [Migration("20260108102730_AddOtpTable")]
+    partial class AddOtpTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,28 +24,6 @@ namespace DataLayer.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ModelLayer.Entities.Label", b =>
-                {
-                    b.Property<int>("LabelId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LabelId"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("LabelId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Labels");
-                });
 
             modelBuilder.Entity("ModelLayer.Entities.Note", b =>
                 {
@@ -91,11 +72,11 @@ namespace DataLayer.Migrations
 
             modelBuilder.Entity("ModelLayer.Entities.Otp", b =>
                 {
-                    b.Property<int>("OtpId")
+                    b.Property<int>("OptId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OtpId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OptId"));
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -110,7 +91,7 @@ namespace DataLayer.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("OtpId");
+                    b.HasKey("OptId");
 
                     b.HasIndex("UserId");
 
@@ -152,17 +133,6 @@ namespace DataLayer.Migrations
                     b.HasKey("UserId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("ModelLayer.Entities.Label", b =>
-                {
-                    b.HasOne("ModelLayer.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ModelLayer.Entities.Note", b =>

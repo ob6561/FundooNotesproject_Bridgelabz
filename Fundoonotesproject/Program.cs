@@ -1,12 +1,13 @@
+using BusinessLayer;
+using BusinessLayer.Services;
+using DataLayer.Context;
+using DataLayer.Repositories.Implementations;
+using DataLayer.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using BusinessLayer;
-using DataLayer.Context;
-using DataLayer.Repositories.Interfaces;
-using DataLayer.Repositories.Implementations;
 
 
 namespace Fundoonotesproject
@@ -60,6 +61,8 @@ namespace Fundoonotesproject
             // -------------------- Dependency Injection --------------------
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<INoteRepository, NoteRepository>();
+            builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+            builder.Services.AddScoped<EmailService>();
             builder.Services.AddScoped<NoteService>();
             builder.Services.AddScoped<UserService>();
 
