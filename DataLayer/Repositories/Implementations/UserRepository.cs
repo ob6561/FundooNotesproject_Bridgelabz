@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using DataLayer.Context;
 using DataLayer.Repositories.Interfaces;
 using ModelLayer.Entities;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataLayer.Repositories.Implementations
 {
@@ -20,28 +19,31 @@ namespace DataLayer.Repositories.Implementations
             _context = context;
         }
 
-        public User? GetByEmail(string email)
+        public async Task<User?> GetByEmailAsync(string email)
         {
-            return _context.Users.FirstOrDefault(u => u.Email == email);
+            return await _context.Users
+                                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
-        public void Register(User user)
+        public async Task RegisterAsync(User user)
         {
-            _context.Users.Add(user);
-            _context.SaveChanges();
+            await _context.Users.AddAsync(user);
+            await _context.SaveChangesAsync();
         }
-        public void Update(User user)
+
+        public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
-            _context.SaveChanges();
-        }
-        public User? GetByResetToken(string token)
-        {
-            return _context.Users.FirstOrDefault(u =>
-                u.ResetToken == token &&
-                u.ResetTokenExpiry > DateTime.UtcNow);
+            await _context.SaveChangesAsync();
         }
 
+        public async Task<User?> GetByResetTokenAsync(string token)
+        {
+            return await _context.Users
+                                 .FirstOrDefaultAsync(u =>
+                                     u.ResetToken == token &&
+                                     u.ResetTokenExpiry > DateTime.UtcNow);
+        }
     }
 }
 

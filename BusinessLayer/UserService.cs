@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace BusinessLayer
 {
@@ -34,10 +35,9 @@ namespace BusinessLayer
         }
 
         
-
-        public bool Register(RegisterDto dto)
+        public async Task<bool> RegisterAsync(RegisterDto dto)
         {
-            var existingUser = _userRepository.GetByEmail(dto.Email);
+            var existingUser = await _userRepository.GetByEmailAsync(dto.Email);
             if (existingUser != null)
                 return false;
 
@@ -50,23 +50,19 @@ namespace BusinessLayer
                 CreatedAt = DateTime.UtcNow
             };
 
-            _userRepository.Register(user);
-
-            
-            GenerateAndSendOtp(user);
+            await _userRepository.RegisterAsync(user);
+            await GenerateAndSendOtpAsync(user);
 
             return true;
         }
 
         
-
-        public string Login(LoginDto dto)
+        public async Task<string> LoginAsync(LoginDto dto)
         {
-            var user = _userRepository.GetByEmail(dto.Email);
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
             if (user == null)
                 throw new Exception("Invalid email or password");
 
-            
             if (!user.IsEmailVerified)
                 throw new Exception("Please verify your email before logging in");
 
@@ -74,43 +70,16 @@ namespace BusinessLayer
             if (!isValidPassword)
                 throw new Exception("Invalid email or password");
 
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim("UserId", user.UserId.ToString())
-            };
-
-            var key = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"])
-            );
-
-            var credentials = new SigningCredentials(
-                key,
-                SecurityAlgorithms.HmacSha256
-            );
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(
-                    Convert.ToDouble(_configuration["Jwt:ExpiryMinutes"])
-                ),
-                signingCredentials: credentials
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            return GenerateJwtToken(user);
         }
 
-
         
-
         private string GenerateOtp()
         {
             return new Random().Next(100000, 999999).ToString();
         }
 
-        public void GenerateAndSendOtp(User user)
+        public async Task GenerateAndSendOtpAsync(User user)
         {
             string generatedOtp = GenerateOtp();
 
@@ -122,32 +91,83 @@ namespace BusinessLayer
                 IsUsed = false
             };
 
-            _otpRepository.Add(otp);
-            _emailService.SendOtp(user.Email, generatedOtp);
+            await _otpRepository.AddAsync(otp);
+            await _emailService.SendOtpAsync(user.Email, generatedOtp);
         }
 
-        public string VerifyOtp(string email, string otpCode)
+        public async Task<string> VerifyOtpAsync(string email, string otpCode)
         {
-            var user = _userRepository.GetByEmail(email);
+            var user = await _userRepository.GetByEmailAsync(email);
             if (user == null)
                 throw new Exception("Invalid user");
 
-            var otp = _otpRepository.GetValidOtp(user.UserId, otpCode);
+            var otp = await _otpRepository.GetValidOtpAsync(user.UserId, otpCode);
             if (otp == null)
                 throw new Exception("Invalid or expired OTP");
 
             otp.IsUsed = true;
-            _otpRepository.Update(otp);
+            await _otpRepository.UpdateAsync(otp);
 
             user.IsEmailVerified = true;
-            _userRepository.Update(user);
+            await _userRepository.UpdateAsync(user);
 
-            
             return GenerateJwtToken(user);
         }
 
         
+        public async Task<string> ForgotPasswordAsync(ForgotPasswordDto dto)
+        {
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+            if (user == null)
+                throw new Exception("Email not registered");
 
+            var token = Guid.NewGuid().ToString();
+
+            user.ResetToken = token;
+            user.ResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
+
+            await _userRepository.UpdateAsync(user);
+            return token;
+        }
+
+        public async Task<string> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            if (dto.NewPassword != dto.ConfirmPassword)
+                throw new Exception("Passwords do not match");
+
+            var user = await _userRepository.GetByResetTokenAsync(dto.Token);
+            if (user == null)
+                throw new Exception("Invalid or expired token");
+
+            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.ResetToken = null;
+            user.ResetTokenExpiry = null;
+
+            await _userRepository.UpdateAsync(user);
+            return "Password reset successful";
+        }
+
+        
+        public async Task<string> VerifyEmailAsync(VerifyEmailDto dto)
+        {
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+            if (user == null)
+                throw new Exception("User not found");
+
+            var otp = await _otpRepository.GetValidOtpAsync(user.UserId, dto.Otp);
+            if (otp == null)
+                throw new Exception("Invalid or expired OTP");
+
+            user.IsEmailVerified = true;
+            otp.IsUsed = true;
+
+            await _userRepository.UpdateAsync(user);
+            await _otpRepository.UpdateAsync(otp);
+
+            return "Email verified successfully";
+        }
+
+        
         private string GenerateJwtToken(User user)
         {
             var claims = new List<Claim>
@@ -177,61 +197,5 @@ namespace BusinessLayer
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
-
-        
-
-        public string ForgotPassword(ForgotPasswordDto dto)
-        {
-            var user = _userRepository.GetByEmail(dto.Email);
-            if (user == null)
-                throw new Exception("Email not registered");
-
-            var token = Guid.NewGuid().ToString();
-
-            user.ResetToken = token;
-            user.ResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
-
-            _userRepository.Update(user);
-
-            return token; 
-        }
-
-        public string ResetPassword(ResetPasswordDto dto)
-        {
-            if (dto.NewPassword != dto.ConfirmPassword)
-                throw new Exception("Passwords do not match");
-
-            var user = _userRepository.GetByResetToken(dto.Token);
-            if (user == null)
-                throw new Exception("Invalid or expired token");
-
-            user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-            user.ResetToken = null;
-            user.ResetTokenExpiry = null;
-
-            _userRepository.Update(user);
-
-            return "Password reset successful";
-        }
-
-        public string VerifyEmail(VerifyEmailDto dto)
-        {
-            var user = _userRepository.GetByEmail(dto.Email);
-            if (user == null)
-                throw new Exception("User not found");
-
-            var otp = _otpRepository.GetValidOtp(user.UserId, dto.Otp);
-            if (otp == null)
-                throw new Exception("Invalid or expired OTP");
-
-            user.IsEmailVerified = true;
-            otp.IsUsed = true;
-
-            _userRepository.Update(user);
-            _otpRepository.Update(otp);
-
-            return "Email verified successfully";
-        }
-
     }
 }

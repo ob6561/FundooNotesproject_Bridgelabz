@@ -1,9 +1,8 @@
-﻿
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Mvc;
 using ModelLayer.DTOs;
 using ModelLayer.DTOs.Auth;
-using Microsoft.AspNetCore.Mvc;
 using BusinessLayer;
+using System.Threading.Tasks;
 
 namespace Fundoonotesproject.Controllers
 {
@@ -18,48 +17,47 @@ namespace Fundoonotesproject.Controllers
             _userService = userService;
         }
 
+        
         [HttpPost("register")]
-        public IActionResult Register(RegisterDto dto)
+        public async Task<IActionResult> Register(RegisterDto dto)
         {
-            var result = _userService.Register(dto);
+            var result = await _userService.RegisterAsync(dto);
             if (!result)
                 return BadRequest("User already exists");
 
             return Ok("User registered successfully");
         }
 
+        
         [HttpPost("login")]
-        public IActionResult Login(LoginDto dto)
+        public async Task<IActionResult> Login(LoginDto dto)
         {
-            var token = _userService.Login(dto);
-
-            if (token == null)
-                return Unauthorized("Invalid email or password");
-
+            var token = await _userService.LoginAsync(dto);
             return Ok(new { Token = token });
         }
 
+        
         [HttpPost("verify-email")]
-        public IActionResult VerifyEmail(VerifyEmailDto dto)
+        public async Task<IActionResult> VerifyEmail(VerifyEmailDto dto)
         {
-            var result = _userService.VerifyEmail(dto);
+            var result = await _userService.VerifyEmailAsync(dto);
             return Ok(result);
         }
 
+        
         [HttpPost("forgot-password")]
-        public IActionResult ForgotPassword(ForgotPasswordDto dto)
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
         {
-            var token = _userService.ForgotPassword(dto);
+            var token = await _userService.ForgotPasswordAsync(dto);
             return Ok(new { ResetToken = token });
         }
 
+        
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword(ResetPasswordDto dto)
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
         {
-            var result = _userService.ResetPassword(dto);
+            var result = await _userService.ResetPasswordAsync(dto);
             return Ok(result);
         }
-
     }
 }
-

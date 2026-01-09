@@ -62,6 +62,10 @@ namespace Fundoonotesproject
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<INoteRepository, NoteRepository>();
             builder.Services.AddScoped<IOtpRepository, OtpRepository>();
+            builder.Services.AddScoped<ILabelRepository, LabelRepository>();
+            builder.Services.AddScoped<ICollaboratorRepository, CollaboratorRepository>();
+            builder.Services.AddScoped<CollaboratorService>();
+            builder.Services.AddScoped<LabelService>();
             builder.Services.AddScoped<EmailService>();
             builder.Services.AddScoped<NoteService>();
             builder.Services.AddScoped<UserService>();

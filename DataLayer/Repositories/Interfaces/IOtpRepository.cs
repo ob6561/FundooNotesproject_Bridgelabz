@@ -9,8 +9,8 @@ namespace DataLayer.Repositories.Interfaces
 {
     public interface IOtpRepository
     {
-        void Add(Otp otp);
-        Otp GetValidOtp(int userId, string code);
-        void Update(Otp otp);
+        Task AddAsync(Otp otp);
+        Task<Otp?> GetValidOtpAsync(int userId, string code);
+        Task UpdateAsync(Otp otp);
     }
 }

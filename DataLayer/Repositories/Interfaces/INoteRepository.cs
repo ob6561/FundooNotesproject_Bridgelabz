@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using ModelLayer.Entities;
 using System.Collections.Generic;
 
@@ -11,14 +10,12 @@ namespace DataLayer.Repositories.Interfaces
 {
     public interface INoteRepository
     {
-        IEnumerable<Note> GetAllByUser(int userId);
-        Note? GetById(int noteId, int userId);
-        void Add(Note note);
-        void Update(Note note);
-        void Delete(Note note);
-        void BulkDelete(List<int> noteIds, int userId);
-        List<Note> SearchNotes(int userId, string query);
-        
-
+        Task<List<Note>> GetAllByUserAsync(int userId);
+        Task<Note?> GetByIdAsync(int noteId, int userId);
+        Task AddAsync(Note note);
+        Task UpdateAsync(Note note);
+        Task DeleteAsync(Note note);
+        Task BulkDeleteAsync(List<int> noteIds, int userId);
+        Task<List<Note>> SearchNotesAsync(int userId, string query);
     }
 }

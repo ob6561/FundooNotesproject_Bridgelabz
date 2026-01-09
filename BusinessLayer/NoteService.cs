@@ -1,11 +1,9 @@
 ﻿using DataLayer.Repositories.Interfaces;
-using ModelLayer.DTOs;
 using ModelLayer.DTOs.Notes;
 using ModelLayer.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BusinessLayer
@@ -19,108 +17,116 @@ namespace BusinessLayer
             _noteRepository = noteRepository;
         }
 
-        public IEnumerable<Note> GetNotes(int userId)
+        
+        public async Task<List<Note>> GetNotesAsync(int userId)
         {
-            return _noteRepository.GetAllByUser(userId);
+            return await _noteRepository.GetAllByUserAsync(userId);
         }
 
-        public Note? GetNoteById(int noteId, int userId)
+        
+        public async Task<Note?> GetNoteByIdAsync(int noteId, int userId)
         {
-            return _noteRepository.GetById(noteId, userId);
+            return await _noteRepository.GetByIdAsync(noteId, userId);
         }
 
-        public void CreateNote(CreateNoteDto dto, int userId)
+        
+        public async Task CreateNoteAsync(CreateNoteDto dto, int userId)
         {
             var note = new Note
             {
                 Title = dto.Title,
                 Content = dto.Content,
                 UserId = userId,
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 Color = "#ffffff",
                 IsPinned = false,
                 IsArchived = false,
                 IsDeleted = false
             };
 
-            _noteRepository.Add(note);
-            
+            await _noteRepository.AddAsync(note);
         }
 
-        public bool UpdateNote(int noteId, int userId, UpdateNoteDto dto)
+        
+        public async Task<bool> UpdateNoteAsync(int noteId, int userId, UpdateNoteDto dto)
         {
-            var note = _noteRepository.GetById(noteId, userId);
+            var note = await _noteRepository.GetByIdAsync(noteId, userId);
             if (note == null) return false;
 
             note.Title = dto.Title;
             note.Content = dto.Content;
-            note.UpdatedAt = DateTime.Now;
+            note.UpdatedAt = DateTime.UtcNow;
 
-            _noteRepository.Update(note);
+            await _noteRepository.UpdateAsync(note);
             return true;
         }
 
-        public bool DeleteNote(int noteId, int userId)
+        
+        public async Task<bool> DeleteNoteAsync(int noteId, int userId)
         {
-            var note = _noteRepository.GetById(noteId, userId);
+            var note = await _noteRepository.GetByIdAsync(noteId, userId);
             if (note == null) return false;
 
-            _noteRepository.Delete(note);
+            await _noteRepository.DeleteAsync(note);
             return true;
         }
 
-        public bool TogglePin(int noteId, int userId)
+        
+        public async Task<bool> TogglePinAsync(int noteId, int userId)
         {
-            var note = _noteRepository.GetById(noteId,userId);
-            if(note == null) return false;
+            var note = await _noteRepository.GetByIdAsync(noteId, userId);
+            if (note == null) return false;
+
             note.IsPinned = !note.IsPinned;
-            note.UpdatedAt = DateTime.Now;
-            _noteRepository.Update(note);
+            note.UpdatedAt = DateTime.UtcNow;
+
+            await _noteRepository.UpdateAsync(note);
             return true;
         }
 
-        public List<Note> SearchNotes(int userId, string query)
+        
+        public async Task<List<Note>> SearchNotesAsync(int userId, string query)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return new List<Note>();
 
-            return _noteRepository.SearchNotes(userId, query);
+            return await _noteRepository.SearchNotesAsync(userId, query);
         }
 
-        public bool ToggleArchive(int noteId, int userId)
+        
+        public async Task<bool> ToggleArchiveAsync(int noteId, int userId)
         {
-            var note = _noteRepository.GetById(noteId, userId);
+            var note = await _noteRepository.GetByIdAsync(noteId, userId);
             if (note == null) return false;
 
             note.IsArchived = !note.IsArchived;
-            note.UpdatedAt = DateTime.Now;
+            note.UpdatedAt = DateTime.UtcNow;
 
-            _noteRepository.Update(note);
+            await _noteRepository.UpdateAsync(note);
             return true;
         }
 
-        public bool UpdateColor(int noteId, int userId, string color)
+        
+        public async Task<bool> UpdateColorAsync(int noteId, int userId, string color)
         {
-            var note = _noteRepository.GetById(noteId, userId);
+            var note = await _noteRepository.GetByIdAsync(noteId, userId);
             if (note == null) return false;
 
             note.Color = color;
-            note.UpdatedAt = DateTime.Now;
+            note.UpdatedAt = DateTime.UtcNow;
 
-            _noteRepository.Update(note);
+            await _noteRepository.UpdateAsync(note);
             return true;
         }
 
-        public void BulkDeleteNotes(List<int> noteIds, int userId)
+        
+        public async Task BulkDeleteNotesAsync(List<int> noteIds, int userId)
         {
             if (noteIds == null || !noteIds.Any())
                 return;
 
-            _noteRepository.BulkDelete(noteIds, userId);
+            await _noteRepository.BulkDeleteAsync(noteIds, userId);
         }
-
     }
 }
-
-

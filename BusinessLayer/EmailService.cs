@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Net.Mail;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
 namespace BusinessLayer.Services
@@ -13,11 +15,17 @@ namespace BusinessLayer.Services
             _configuration = configuration;
         }
 
-        public void SendOtp(string toEmail, string otp)
+        public async Task SendOtpAsync(string toEmail, string otp)
         {
-            var smtpClient = new SmtpClient
+            var host = _configuration["EmailSettings:SmtpServer"];
+            if (string.IsNullOrEmpty(host))
             {
-                Host = _configuration["EmailSettings:SmtpServer"],
+                throw new Exception("SMTP HOST IS NULL - CHECK appsettings.json");
+            }
+
+            using var smtpClient = new SmtpClient
+            {
+                Host = host,
                 Port = int.Parse(_configuration["EmailSettings:Port"]),
                 EnableSsl = true,
                 Credentials = new NetworkCredential(
@@ -26,25 +34,20 @@ namespace BusinessLayer.Services
                 )
             };
 
-            var message = new MailMessage
+            using var message = new MailMessage
             {
                 From = new MailAddress(
-                    _configuration["EmailSettings:From"],   
+                    _configuration["EmailSettings:From"],
                     "Fundoo Notes"
                 ),
                 Subject = "OTP Verification",
                 Body = $"Your OTP is {otp}",
                 IsBodyHtml = false
             };
-            var host = _configuration["EmailSettings:SmtpServer"];
-            if (string.IsNullOrEmpty(host))
-            {
-                throw new Exception("SMTP HOST IS NULL - CHECK appsettings.json");
-            }
 
             message.To.Add(toEmail);
 
-            smtpClient.Send(message);
+            await smtpClient.SendMailAsync(message);
         }
     }
 }

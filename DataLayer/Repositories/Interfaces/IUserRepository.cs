@@ -10,11 +10,9 @@ namespace DataLayer.Repositories.Interfaces
 {
     public interface IUserRepository
     {
-        User? GetByEmail(string email);
-        void Register(User user);
-        void Update(User user);
-        User? GetByResetToken(string token);
-
-
+        Task<User?> GetByEmailAsync(string email);
+        Task RegisterAsync(User user);
+        Task UpdateAsync(User user);
+        Task<User?> GetByResetTokenAsync(string token);
     }
 }

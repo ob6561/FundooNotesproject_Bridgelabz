@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ModelLayer.DTOs.Notes;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Fundoonotesproject.Controllers
 {
@@ -18,28 +19,27 @@ namespace Fundoonotesproject.Controllers
             _noteService = noteService;
         }
 
-        
         private int GetUserId()
         {
             var userIdClaim = User.FindFirst("UserId")?.Value;
             return int.Parse(userIdClaim!);
         }
 
-        // api/notes
+        
         [HttpGet]
-        public IActionResult GetAllNotes()
+        public async Task<IActionResult> GetAllNotes()
         {
             int userId = GetUserId();
-            var notes = _noteService.GetNotes(userId);
+            var notes = await _noteService.GetNotesAsync(userId);
             return Ok(notes);
         }
 
-        // notes id
+        
         [HttpGet("{id}")]
-        public IActionResult GetNoteById(int id)
+        public async Task<IActionResult> GetNoteById(int id)
         {
             int userId = GetUserId();
-            var note = _noteService.GetNoteById(id, userId);
+            var note = await _noteService.GetNoteByIdAsync(id, userId);
 
             if (note == null)
                 return NotFound("Note not found");
@@ -47,21 +47,21 @@ namespace Fundoonotesproject.Controllers
             return Ok(note);
         }
 
-        // POST notes
+        
         [HttpPost]
-        public IActionResult CreateNote([FromBody] CreateNoteDto dto)
+        public async Task<IActionResult> CreateNote([FromBody] CreateNoteDto dto)
         {
             int userId = GetUserId();
-            _noteService.CreateNote(dto, userId);
+            await _noteService.CreateNoteAsync(dto, userId);
             return Ok("Note created successfully");
         }
 
-        // PUT notes id
+        
         [HttpPut("{id}")]
-        public IActionResult UpdateNote(int id, [FromBody] UpdateNoteDto dto)
+        public async Task<IActionResult> UpdateNote(int id, [FromBody] UpdateNoteDto dto)
         {
             int userId = GetUserId();
-            bool updated = _noteService.UpdateNote(id, userId, dto);
+            bool updated = await _noteService.UpdateNoteAsync(id, userId, dto);
 
             if (!updated)
                 return NotFound("Note not found");
@@ -69,12 +69,12 @@ namespace Fundoonotesproject.Controllers
             return Ok("Note updated successfully");
         }
 
-        // DELETE notes id
+        
         [HttpDelete("{id}")]
-        public IActionResult DeleteNote(int id)
+        public async Task<IActionResult> DeleteNote(int id)
         {
             int userId = GetUserId();
-            bool deleted = _noteService.DeleteNote(id, userId);
+            bool deleted = await _noteService.DeleteNoteAsync(id, userId);
 
             if (!deleted)
                 return NotFound("Note not found");
@@ -82,12 +82,12 @@ namespace Fundoonotesproject.Controllers
             return Ok("Note deleted successfully");
         }
 
-        // patch id
+        
         [HttpPatch("{id}/pin")]
-        public IActionResult TogglePin(int id)
+        public async Task<IActionResult> TogglePin(int id)
         {
             int userId = GetUserId();
-            bool result = _noteService.TogglePin(id, userId);
+            bool result = await _noteService.TogglePinAsync(id, userId);
 
             if (!result)
                 return NotFound("Note not found");
@@ -95,29 +95,21 @@ namespace Fundoonotesproject.Controllers
             return Ok("Pin status toggled");
         }
 
-        // debug checking jwt
-        [HttpGet("debug-auth")]
-        public IActionResult DebugAuth()
-        {
-            return Ok(
-                User.Claims.Select(c => new { c.Type, c.Value })
-            );
-        }
-
-        // notes searching
+        
         [HttpGet("search")]
-        public IActionResult SearchNotes([FromQuery] string query)
+        public async Task<IActionResult> SearchNotes([FromQuery] string query)
         {
             int userId = GetUserId();
-            var notes = _noteService.SearchNotes(userId, query);
+            var notes = await _noteService.SearchNotesAsync(userId, query);
             return Ok(notes);
         }
 
+        
         [HttpPatch("{id}/archive")]
-        public IActionResult ToggleArchive(int id)
+        public async Task<IActionResult> ToggleArchive(int id)
         {
             int userId = GetUserId();
-            bool result = _noteService.ToggleArchive(id, userId);
+            bool result = await _noteService.ToggleArchiveAsync(id, userId);
 
             if (!result)
                 return NotFound("Note not found");
@@ -125,11 +117,12 @@ namespace Fundoonotesproject.Controllers
             return Ok("Archive status toggled");
         }
 
+        
         [HttpPatch("{id}/color")]
-        public IActionResult UpdateColor(int id, UpdateNoteColorDto dto)
+        public async Task<IActionResult> UpdateColor(int id, UpdateNoteColorDto dto)
         {
             int userId = GetUserId();
-            bool result = _noteService.UpdateColor(id, userId, dto.Color);
+            bool result = await _noteService.UpdateColorAsync(id, userId, dto.Color);
 
             if (!result)
                 return NotFound("Note not found");
@@ -137,13 +130,22 @@ namespace Fundoonotesproject.Controllers
             return Ok("Color updated successfully");
         }
 
+        
         [HttpDelete("bulk")]
-        public IActionResult BulkDelete(BulkDeleteNotesDto dto)
+        public async Task<IActionResult> BulkDelete(BulkDeleteNotesDto dto)
         {
             int userId = GetUserId();
-            _noteService.BulkDeleteNotes(dto.NoteIds, userId);
+            await _noteService.BulkDeleteNotesAsync(dto.NoteIds, userId);
             return Ok("Notes deleted successfully");
         }
 
+        
+        [HttpGet("debug-auth")]
+        public IActionResult DebugAuth()
+        {
+            return Ok(
+                User.Claims.Select(c => new { c.Type, c.Value })
+            );
+        }
     }
 }

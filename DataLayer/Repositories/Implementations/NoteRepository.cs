@@ -19,58 +19,59 @@ namespace DataLayer.Repositories.Implementations
             _context = context;
         }
 
-        public IEnumerable<Note> GetAllByUser(int userId)
+        public async Task<List<Note>> GetAllByUserAsync(int userId)
         {
-            return _context.Notes
-                           .Where(n => n.UserId == userId)
-                           .ToList();
+            return await _context.Notes
+                                 .Where(n => n.UserId == userId)
+                                 .ToListAsync();
         }
 
-        public Note? GetById(int noteId, int userId)
+        public async Task<Note?> GetByIdAsync(int noteId, int userId)
         {
-            return _context.Notes
-                           .FirstOrDefault(n => n.NoteId == noteId && n.UserId == userId);
+            return await _context.Notes
+                                 .FirstOrDefaultAsync(n =>
+                                     n.NoteId == noteId &&
+                                     n.UserId == userId);
         }
 
-        public void Add(Note note)
+        public async Task AddAsync(Note note)
         {
-            _context.Notes.Add(note);
-            _context.SaveChanges();
+            await _context.Notes.AddAsync(note);
+            await _context.SaveChangesAsync();
         }
 
-        public void Update(Note note)
+        public async Task UpdateAsync(Note note)
         {
             _context.Notes.Update(note);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public void Delete(Note note)
+        public async Task DeleteAsync(Note note)
         {
             _context.Notes.Remove(note);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
-        public List<Note> SearchNotes(int userId, string query)
+        public async Task<List<Note>> SearchNotesAsync(int userId, string query)
         {
-            return _context.Notes
+            return await _context.Notes
                 .Where(n =>
                     n.UserId == userId &&
                     !n.IsDeleted &&
                     (n.Title.Contains(query) || n.Content.Contains(query))
                 )
-                .ToList();
+                .ToListAsync();
         }
 
-        public void BulkDelete(List<int> noteIds, int userId)
+        public async Task BulkDeleteAsync(List<int> noteIds, int userId)
         {
-            var notes = _context.Notes
+            var notes = await _context.Notes
                 .Where(n => noteIds.Contains(n.NoteId) && n.UserId == userId)
-                .ToList();
+                .ToListAsync();
 
             _context.Notes.RemoveRange(notes);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
-
     }
 }
 

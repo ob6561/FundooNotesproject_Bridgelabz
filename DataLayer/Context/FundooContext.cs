@@ -20,6 +20,7 @@ namespace DataLayer.Context
         public DbSet<Note> Notes { get; set; }
         public DbSet<Otp> Otps { get; set; }
         public DbSet<Label> Labels { get; set; }
+        public DbSet<Collaborator> Collaborators { get; set; }
 
     }
 }
