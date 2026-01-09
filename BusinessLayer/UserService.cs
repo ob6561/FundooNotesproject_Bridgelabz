@@ -114,40 +114,42 @@ namespace BusinessLayer
             return GenerateJwtToken(user);
         }
 
-        
+
         public async Task<string> ForgotPasswordAsync(ForgotPasswordDto dto)
         {
             var user = await _userRepository.GetByEmailAsync(dto.Email);
             if (user == null)
                 throw new Exception("Email not registered");
 
-            var token = Guid.NewGuid().ToString();
-
-            user.ResetToken = token;
-            user.ResetTokenExpiry = DateTime.UtcNow.AddMinutes(15);
-
-            await _userRepository.UpdateAsync(user);
-            return token;
+            await GenerateAndSendOtpAsync(user);
+            return "OTP sent to registered email";
         }
 
-        public async Task<string> ResetPasswordAsync(ResetPasswordDto dto)
+
+        public async Task<string> ResetPasswordWithOtpAsync(ResetPasswordWithOtpDto dto)
         {
             if (dto.NewPassword != dto.ConfirmPassword)
                 throw new Exception("Passwords do not match");
 
-            var user = await _userRepository.GetByResetTokenAsync(dto.Token);
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
             if (user == null)
-                throw new Exception("Invalid or expired token");
+                throw new Exception("Invalid user");
+
+            var otp = await _otpRepository.GetValidOtpAsync(user.UserId, dto.Otp);
+            if (otp == null)
+                throw new Exception("Invalid or expired OTP");
+
+            otp.IsUsed = true;
+            await _otpRepository.UpdateAsync(otp);
 
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
-            user.ResetToken = null;
-            user.ResetTokenExpiry = null;
-
             await _userRepository.UpdateAsync(user);
+
             return "Password reset successful";
         }
 
-        
+
+
         public async Task<string> VerifyEmailAsync(VerifyEmailDto dto)
         {
             var user = await _userRepository.GetByEmailAsync(dto.Email);

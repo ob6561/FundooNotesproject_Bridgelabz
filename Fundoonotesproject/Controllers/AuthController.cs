@@ -52,11 +52,11 @@ namespace Fundoonotesproject.Controllers
             return Ok(new { ResetToken = token });
         }
 
-        
+
         [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+        public async Task<IActionResult> ResetPassword(ResetPasswordWithOtpDto dto)
         {
-            var result = await _userService.ResetPasswordAsync(dto);
+            var result = await _userService.ResetPasswordWithOtpAsync(dto);
             return Ok(result);
         }
     }
